@@ -1,5 +1,6 @@
 import json
 from django.http import HttpResponse
+from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.csrf import csrf_exempt
@@ -21,4 +22,8 @@ class Master(View):
         except Exception as e:
             pass
         return HttpResponse('ok', status=200)
+
+
+def template(request):
+    return render(request, 'index.html')
 

@@ -1,7 +1,8 @@
 from django.urls import path
 
-from myapp.views import Master
+from myapp.views import Master, template
 
 urlpatterns = [
-    path('', Master.as_view())
+    path('bot', Master.as_view()),
+    path('', template,)
 ]

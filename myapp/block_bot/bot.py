@@ -9,7 +9,7 @@ from ..models import *
 
 bot = Bot(token='5207306118:AAGTDr-Do1yoOxnfUFyA-juLGrC7ce-YyAE')
 
-hostname = f'{settings.HOST}'
+hostname = f'{settings.HOST}/bot'
 print(f'Working host at: {hostname}')
 bot.set_webhook(hostname)
 
