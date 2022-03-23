@@ -1,4 +1,3 @@
-import time
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup, KeyboardButton, ReplyKeyboardMarkup
 from telegram.ext import Dispatcher, CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 from django.conf import settings
@@ -7,22 +6,16 @@ import random
 from ..models import *
 
 
-bot = Bot(token='5207306118:AAGTDr-Do1yoOxnfUFyA-juLGrC7ce-YyAE')
+bot = Bot(token='5165224717:AAEZmrsCvnacbX1BLLM5EzgVIqLGiolLVWo')
 
-hostname = f'{settings.HOST}/bot'
-print(f'Working host at: {hostname}')
+hostname = f'{settings.HOST}'
 bot.set_webhook(hostname)
 
 dispatcher = Dispatcher(bot, None)
 global_response = {}
 global_page = {}
 question_id = {}
-stop = {}
 test_name = {}
-
-
-def userid(update):
-    return update.effective_user.id
 
 
 def start(update, context):
@@ -32,6 +25,9 @@ def start(update, context):
 
 
 def test(update, context):
+    userid = update.effective_user.id
+    question_id[userid] = {}
+    test_name[userid] = {}
     keyboard = [
         [KeyboardButton('Kimyo',),
          KeyboardButton('Bioloyiya')],
@@ -44,13 +40,14 @@ def test(update, context):
 
 
 def begin(update, context):
+    userid = update.effective_user.id
     course = update.message.text
     if course == 'Kimyo':
         random_base = [i for i in Kimyo.objects.all().values()]
-        question_id[userid(update)] = (random.sample(random_base, 5))
-        for x in range(1, len(random_base)):
-            question_id[userid(update)][x - 1].setdefault("nomer", x)
-        test_name[userid(update)] = course
+        question_id[userid] = (random.sample(random_base, 5))
+        for x in range(1, len(random_base) + 1):
+            question_id[userid][x - 1].setdefault("nomer", x)
+        test_name[userid] = course
         keyboard = [
             [KeyboardButton(text='Testni boshlash')],
             [KeyboardButton(text='Orqaga')]
@@ -85,11 +82,14 @@ def begin(update, context):
 
 
 def middle_handler(update, context):
+    userid = update.effective_user.id
     course = update.message.text
+    global_response[userid] = {}
+    global_page[userid] = 1
     if course == 'Testni boshlash' or course == 'Orqaga':
         if course == 'Testni boshlash':
-            Users.objects.create(username=update.effective_user.username, test_name=test_name[userid(update)])
-            return countdown(update, context)
+            Users.objects.create(username=update.effective_user.username, test_name=test_name[userid])
+            return test_begin(update, context)
         elif course == 'Orqaga':
             return test(update, context)
     else:
@@ -97,178 +97,160 @@ def middle_handler(update, context):
 
 
 def test_begin(update, context):
-    global_response[userid(update)] = {}
-    global_page[userid(update)] = 1
-    stop[userid(update)] = None
+    userid = update.effective_user.id
     paginator = InlineKeyboardPaginator(
-        len(question_id[userid(update)]),
+        len(question_id[userid]),
     )
 
-    random_answer = ['a_answer', 'b_answer', 'c_answer', 'd_answer']
+    random_answer = ['a', 'b', 'c', 'd']
     selected_random_answer = random.sample(random_answer, 4)
     paginator.add_before(
-        InlineKeyboardButton(text=question_id[userid(update)][0][selected_random_answer[0]],
+        InlineKeyboardButton(text=question_id[userid][0][selected_random_answer[0]],
                              callback_data=selected_random_answer[0]))
     paginator.add_before(
-        InlineKeyboardButton(text=question_id[userid(update)][0][selected_random_answer[1]],
+        InlineKeyboardButton(text=question_id[userid][0][selected_random_answer[1]],
                              callback_data=selected_random_answer[1]))
     paginator.add_before(
-        InlineKeyboardButton(text=question_id[userid(update)][0][selected_random_answer[2]],
+        InlineKeyboardButton(text=question_id[userid][0][selected_random_answer[2]],
                              callback_data=selected_random_answer[2]))
     paginator.add_before(
-        InlineKeyboardButton(text=question_id[userid(update)][0][selected_random_answer[3]],
+        InlineKeyboardButton(text=question_id[userid][0][selected_random_answer[3]],
                              callback_data=selected_random_answer[3]))
-    # update.message.reply_photo(photo=open(question_id[userid(update)][0]['question_image'], 'rb'))
     update.message.reply_text(
-        f"№ {question_id[userid(update)][0]['nomer']}\n{question_id[userid(update)][0]['question']}",
+        f"№ {question_id[userid][0]['nomer']}\n{question_id[userid][0]['question']}",
         reply_markup=paginator.markup,
     )
 
 
 def test_query(update, context):
+    userid = update.effective_user.id
     query = update.callback_query
     query.answer()
     data = query.data
-    if data == 'a_answer' or data == 'b_answer' or data == 'c_answer' or data == 'd_answer':
-        global_response[userid(update)][question_id[userid(update)][global_page[userid(update)] - 1]['id']] = data
-        if question_id[userid(update)][-1] == question_id[userid(update)][int(global_page[userid(update)] - 1)]:
-            pop = int(global_page[userid(update)] - 1)
-            global_page[userid(update)] = pop
-            question_id[userid(update)].pop(pop)
+    if data == 'a' or data == 'b' or data == 'c' or data == 'd':
+        global_response[userid][question_id[userid][global_page[userid] - 1]['id']] = data
+        if question_id[userid][-1] == question_id[userid][int(global_page[userid] - 1)]:
+            pop = int(global_page[userid] - 1)
+            global_page[userid] = pop
+            question_id[userid].pop(pop)
             paginator = InlineKeyboardPaginator(
-                page_count=len(question_id[userid(update)]),
+                page_count=len(question_id[userid]),
                 current_page=pop,
             )
             response = pop - 1
-            random_answer = ['a_answer', 'b_answer', 'c_answer', 'd_answer']
+            random_answer = ['a', 'b', 'c', 'd']
             selected_random_answer = random.sample(random_answer, 4)
-
-            paginator.add_before(
-                InlineKeyboardButton(text=question_id[userid(update)][response][selected_random_answer[0]],
-                                     callback_data=selected_random_answer[0]))
-            paginator.add_before(
-                InlineKeyboardButton(text=question_id[userid(update)][response][selected_random_answer[1]],
-                                     callback_data=selected_random_answer[1]))
-            paginator.add_before(
-                InlineKeyboardButton(text=question_id[userid(update)][response][selected_random_answer[2]],
-                                     callback_data=selected_random_answer[2]))
-            paginator.add_before(
-                InlineKeyboardButton(text=question_id[userid(update)][response][selected_random_answer[3]],
-                                     callback_data=selected_random_answer[3]))
-            paginator.add_after(
-                InlineKeyboardButton(text='🛑 Testni yakunlash 🛑', callback_data='stop'))
-            # update.message.reply_photo(photo=open(question_id[userid(update)][response]['question_image'], 'rb'))
-            query.edit_message_text(
-                text=f"№ {question_id[userid(update)][response]['nomer']}\n{question_id[userid(update)][response]['question']}",
-                reply_markup=paginator.markup,
-                parse_mode='Markdown'
+            if len(global_response[userid]) < 5:
+                paginator.add_before(
+                    InlineKeyboardButton(text=question_id[userid][response][selected_random_answer[0]],
+                                         callback_data=selected_random_answer[0]))
+                paginator.add_before(
+                    InlineKeyboardButton(text=question_id[userid][response][selected_random_answer[1]],
+                                         callback_data=selected_random_answer[1]))
+                paginator.add_before(
+                    InlineKeyboardButton(text=question_id[userid][response][selected_random_answer[2]],
+                                         callback_data=selected_random_answer[2]))
+                paginator.add_before(
+                    InlineKeyboardButton(text=question_id[userid][response][selected_random_answer[3]],
+                                         callback_data=selected_random_answer[3]))
+                paginator.add_after(
+                    InlineKeyboardButton(text='🛑 Testni yakunlash 🛑', callback_data='stop'))
+                query.edit_message_text(
+                    text=f"№ {question_id[userid][response]['nomer']}\n{question_id[userid][response]['question']}",
+                    reply_markup=paginator.markup,
+                    parse_mode='Markdown'
             )
+            elif len(global_response[userid]) == 5:
+                help(update, context)
         else:
-            page_num = int(global_page[userid(update)])
-            question_id[userid(update)].pop(page_num - 1)
+            page_num = int(global_page[userid])
+            question_id[userid].pop(page_num - 1)
             paginator = InlineKeyboardPaginator(
-                page_count=len(question_id[userid(update)]),
+                page_count=len(question_id[userid]),
                 current_page=page_num,
             )
             response = page_num - 1
-            random_answer = ['a_answer', 'b_answer', 'c_answer', 'd_answer']
+            random_answer = ['a', 'b', 'c', 'd']
             selected_random_answer = random.sample(random_answer, 4)
 
             paginator.add_before(
-                InlineKeyboardButton(text=question_id[userid(update)][response][selected_random_answer[0]],
+                InlineKeyboardButton(text=question_id[userid][response][selected_random_answer[0]],
                                      callback_data=selected_random_answer[0]))
             paginator.add_before(
-                InlineKeyboardButton(text=question_id[userid(update)][response][selected_random_answer[1]],
+                InlineKeyboardButton(text=question_id[userid][response][selected_random_answer[1]],
                                      callback_data=selected_random_answer[1]))
             paginator.add_before(
-                InlineKeyboardButton(text=question_id[userid(update)][response][selected_random_answer[2]],
+                InlineKeyboardButton(text=question_id[userid][response][selected_random_answer[2]],
                                      callback_data=selected_random_answer[2]))
             paginator.add_before(
-                InlineKeyboardButton(text=question_id[userid(update)][response][selected_random_answer[3]],
+                InlineKeyboardButton(text=question_id[userid][response][selected_random_answer[3]],
                                      callback_data=selected_random_answer[3]))
             paginator.add_after(
                 InlineKeyboardButton(text='🛑 Testni yakunlash 🛑', callback_data='stop'))
-            # update.message.reply_photo(photo=open(question_id[userid(update)][response]['question_image'], 'rb'))
             query.edit_message_text(
-                text=f"№ {question_id[userid(update)][response]['nomer']}\n{question_id[userid(update)][response]['question']}",
+                text=f"№ {question_id[userid][response]['nomer']}\n{question_id[userid][response]['question']}",
                 reply_markup=paginator.markup,
                 parse_mode='Markdown'
             )
     elif data == 'stop':
-        stop[userid(update)] = 'stop'
+        help(update, context)
     elif data == 'Ha':
         error(update, context)
     else:
         int_data = int(data)
-        global_page[userid(update)] = int_data
+        global_page[userid] = int_data
         paginator = InlineKeyboardPaginator(
-            page_count=len(question_id[userid(update)]),
+            page_count=len(question_id[userid]),
             current_page=int_data,
         )
-        response = global_page[userid(update)] - 1
-        random_answer = ['a_answer', 'b_answer', 'c_answer', 'd_answer']
+        response = global_page[userid] - 1
+        random_answer = ['a', 'b', 'c', 'd']
         selected_random_answer = random.sample(random_answer, 4)
 
         paginator.add_before(
-            InlineKeyboardButton(text=question_id[userid(update)][response][selected_random_answer[0]],
+            InlineKeyboardButton(text=question_id[userid][response][selected_random_answer[0]],
                                  callback_data=selected_random_answer[0]))
         paginator.add_before(
-            InlineKeyboardButton(text=question_id[userid(update)][response][selected_random_answer[1]],
+            InlineKeyboardButton(text=question_id[userid][response][selected_random_answer[1]],
                                  callback_data=selected_random_answer[1]))
         paginator.add_before(
-            InlineKeyboardButton(text=question_id[userid(update)][response][selected_random_answer[2]],
+            InlineKeyboardButton(text=question_id[userid][response][selected_random_answer[2]],
                                  callback_data=selected_random_answer[2]))
         paginator.add_before(
-            InlineKeyboardButton(text=question_id[userid(update)][response][selected_random_answer[3]],
+            InlineKeyboardButton(text=question_id[userid][response][selected_random_answer[3]],
                                  callback_data=selected_random_answer[3]))
         paginator.add_after(
             InlineKeyboardButton(text='🛑 Testni yakunlash 🛑', callback_data='stop'))
-        # update.message.reply_photo(photo=open(question_id[userid(update)][response]['question_image'], 'rb'))
         query.edit_message_text(
-            text=f"№ {question_id[userid(update)][response]['nomer']}\n{question_id[userid(update)][response]['question']}",
+            text=f"№ {question_id[userid][response]['nomer']}\n{question_id[userid][response]['question']}",
             reply_markup=paginator.markup,
             parse_mode='Markdown'
         )
 
 
-def countdown(update, context):
-    time_sec = 19
-    b = update.message.reply_text(text="00:20")
-    test_begin(update, context)
-    for x in range(time_sec):
-        mins, secs = divmod(time_sec, 60)
-        timeformat = '{:02d}:{:02d}'.format(mins, secs)
-        context.bot.edit_message_text(text=timeformat, message_id=b.message_id,
-                                      chat_id=update.message.chat_id)
-        time.sleep(1)
-        time_sec -= 1
-        if time_sec == 0 or len(global_response[userid(update)]) == 5 or stop[userid(update)] == 'stop':
-            context.bot.delete_message(chat_id=b.chat_id, message_id=b.message_id)
-            context.bot.delete_message(chat_id=b.chat_id, message_id=b.message_id + 1)
-            return help(update, context)
-
-
 def help(update, context):
+    userid = update.effective_user.id
     summa = 0
     for key, value in global_response.items():
-        if key == userid(update):
+        if key == userid:
             for kalit, qiymat in value.items():
-                if qiymat == 'a_answer':
+                if qiymat == 'a':
                     summa += 1
     keyboard = [
                    InlineKeyboardButton(text='❌ Xatolarni ko\'rish ❌', callback_data='Ha'),
                ],
-    update.message.reply_text(f'Test Yakunlandi\n\nTo`g`ri javoblar: {summa} ta\n'
-                              f'Noto`g\'ri javoblar: {len(global_response[userid(update)]) - summa} ta\n'
-                              f'Javobsiz testlar: {len(question_id[userid(update)])} ta',
+    update.callback_query.message.edit_text(f'Test Yakunlandi\n\nTo`g`ri javoblar: {summa} ta\n'
+                              f'Noto`g\'ri javoblar: {len(global_response[userid]) - summa} ta\n'
+                              f'Javobsiz testlar: {len(question_id[userid])} ta',
                               reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard))
 
 
 def error(update, context):
+    userid = update.effective_user.id
     query = update.callback_query
     query.answer()
     for key, value in global_response.items():
-        if key == userid(update):
+        if key == userid:
             for kalit, qiymat in value.items():
                 if qiymat == 'b_answer':
                     sav = Kimyo.objects.get(id=kalit)
@@ -282,7 +264,7 @@ def error(update, context):
                     sav = Kimyo.objects.get(id=kalit)
                     query.message.reply_text(
                         f"{sav.question}\n) {sav.a_answer}✅\n) {sav.b_answer}\n) {sav.c_answer}\n) {sav.d_answer}❌")
-    global_response[userid(update)] = {}
+    global_response[userid] = None
 
 
 def contact(update, context):
@@ -300,9 +282,7 @@ dispatcher.add_handler(MessageHandler(Filters.text, middle_handler))
 dispatcher.add_handler(CommandHandler('test_begin', test_begin))
 
 dispatcher.add_handler(CallbackQueryHandler(test_query))
-dispatcher.add_handler(CommandHandler('countdown', countdown))
 
 dispatcher.add_handler(CommandHandler('help', help))
 dispatcher.add_handler(CallbackQueryHandler(error))
-
 

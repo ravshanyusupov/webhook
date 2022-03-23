@@ -3,12 +3,12 @@ from django.db import models
 
 class Kimyo(models.Model):
     question = models.TextField()
-    a_answer = models.CharField(max_length=255)
-    b_answer = models.CharField(max_length=255)
-    c_answer = models.CharField(max_length=255)
-    d_answer = models.CharField(max_length=255)
+    a = models.CharField(max_length=255)
+    b = models.CharField(max_length=255)
+    c = models.CharField(max_length=255)
+    d = models.CharField(max_length=255)
 
-    def __str__(self):
+    def str(self):
         return self.question
 
 

@@ -1,5 +1,5 @@
 DEBUG = True
 ALLOWED_HOSTS = ['*']
-HOST = 'https://03d6-213-230-80-240.ngrok.io'
+HOST = 'https://aac0-84-54-122-205.ngrok.io'
 
 
