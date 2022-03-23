@@ -77,12 +77,8 @@ WSGI_APPLICATION = 'Block.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'polling bot',
-        'USER': 'ravshanyusupov',
-        'PASSWORD': 'MwE5l6LHY6l42sGfyAhX',
-        'HOST': 'database-1.cppn2xcop13o.us-east-1.rds.amazonaws.com',
-        'PORT': '54324'
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
