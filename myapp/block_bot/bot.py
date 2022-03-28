@@ -6,7 +6,7 @@ import random
 from ..models import *
 
 
-bot = Bot(token='5165224717:AAEZmrsCvnacbX1BLLM5EzgVIqLGiolLVWo')
+bot = Bot(token='5214576791:AAGRGcbgmQ81n7jCLUJmqrS9RlgZiw5mgsU')
 
 hostname = f'{settings.HOST}'
 bot.set_webhook(hostname)
@@ -252,24 +252,24 @@ def error(update, context):
     for key, value in global_response.items():
         if key == userid:
             for kalit, qiymat in value.items():
-                if qiymat == 'b_answer':
+                if qiymat == 'b':
                     sav = Kimyo.objects.get(id=kalit)
                     query.message.reply_text(
-                        f"{sav.question}\n) {sav.a_answer}✅\n) {sav.b_answer}❌\n) {sav.c_answer}\n) {sav.d_answer}")
-                elif qiymat == 'c_answer':
+                        f"{sav.question}\n) {sav.a} ✅\n) {sav.b} ❌\n) {sav.c}\n) {sav.d}")
+                elif qiymat == 'c':
                     sav = Kimyo.objects.get(id=kalit)
                     query.message.reply_text(
-                        f"{sav.question}\n) {sav.a_answer}✅\n) {sav.b_answer}\n) {sav.c_answer}❌\n) {sav.d_answer}")
-                elif qiymat == 'd_answer':
+                        f"{sav.question}\n) {sav.a} ✅\n) {sav.b}\n) {sav.c} ❌\n) {sav.d}")
+                elif qiymat == 'd':
                     sav = Kimyo.objects.get(id=kalit)
                     query.message.reply_text(
-                        f"{sav.question}\n) {sav.a_answer}✅\n) {sav.b_answer}\n) {sav.c_answer}\n) {sav.d_answer}❌")
+                        f"{sav.question}\n) {sav.a} ✅\n) {sav.b}\n) {sav.c}\n) {sav.d} ❌")
     global_response[userid] = None
 
 
 def contact(update, context):
-    update.message.reply_text(f'Q\'oshimcha malumot uchun: admin\n'
-                              f'Test haqida malumot uchun: test admin')
+    update.message.reply_html('<b>Test bo\'yicha murojat:</b> test admin\n'
+                              '<b>Qo\'shimcha talab va takliflar:</b> admin')
 
 
 dispatcher.add_handler(CommandHandler('contact', contact))
